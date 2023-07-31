@@ -1,1 +1,1 @@
-console.log("main js loaded");
+alert("hah");
