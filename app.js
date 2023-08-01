@@ -1,33 +1,49 @@
-// node_modules 에 있는 express 관련 파일을 가져온다.
-var express = require("express");
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+const PORT = 3002; // 포트번호 설정
 
-// express 는 함수이므로, 반환값을 변수에 저장한다.
+var indexRouter = require('./routes/index');
+var testRouter = require('./routes/test');
+var usersRouter = require('./routes/users');
+
 var app = express();
 
-// 3000 포트로 서버 오픈
-app.listen(3000, function () {
-  console.log("start! express server on port 3000");
+// 서버 연결 시 발생
+app.listen(PORT, () => {
+  console.log(`server running on port ${PORT}`);
 });
 
-// request 와 response 라는 인자를 줘서 콜백 함수를 만든다.
-// localhost:3000 브라우저에 res.send() 내부의 문자열이 띄워진다.
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
-// app.get("/", function (req, res) {
-//   res.send("<h1>hi friend!</h1>");
-// });
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// request 와 response 라는 인자를 줘서 콜백 함수를 만든다.
-// localhost:3000 브라우저에 res.sendFile() 내부의 파일이 띄워진다.
+app.use('/', indexRouter);
+app.use('/test', testRouter);
+app.use('/users', usersRouter);
 
-app.get("/", function (req, res) {
-  res.sendFile(__dirname + "/public/main.html");
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
 });
 
-// localhost:3000/main 브라우저에 res.sendFile() 내부의 파일이 띄워진다.
-app.get("/main", function (req, res) {
-  res.sendFile(__dirname + "/public/main.html");
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
 });
 
-// public 디렉토리를 static으로 기억한다.
-// public 내부의 파일들을 localhost:3000/파일명 으로 브라우저에서 불러올 수 있다.
-app.use(express.static("public"));
+module.exports = app;
